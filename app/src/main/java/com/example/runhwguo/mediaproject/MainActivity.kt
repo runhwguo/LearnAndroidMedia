@@ -18,7 +18,12 @@ class MainActivity : AppCompatActivity() {
     fun onBtnImageViewPicClick(v: View) {
         startActivity(Intent(this, ImageViewPicActivity::class.java))
     }
+
     fun onBtnSurfaceViewPicClick(v: View) {
         startActivity(Intent(this, SurfaceViewPicActivity::class.java))
+    }
+
+    fun onCustomViewClick(v: View) {
+        startActivity(Intent(this, CustomVIewPicActivity::class.java))
     }
 }
