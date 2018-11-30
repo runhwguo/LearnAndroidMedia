@@ -3,3 +3,4 @@
 
 初级入门篇
     Android 音视频开发(一) : 通过三种方式绘制图片
+    SurfaceView是单独的windows，用Layout Inspector抓不到布局
