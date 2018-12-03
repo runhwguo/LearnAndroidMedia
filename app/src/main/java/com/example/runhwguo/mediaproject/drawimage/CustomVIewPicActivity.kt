@@ -1,7 +1,8 @@
-package com.example.runhwguo.mediaproject
+package com.example.runhwguo.mediaproject.drawimage
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import com.example.runhwguo.mediaproject.R
 
 class CustomVIewPicActivity : AppCompatActivity() {
 

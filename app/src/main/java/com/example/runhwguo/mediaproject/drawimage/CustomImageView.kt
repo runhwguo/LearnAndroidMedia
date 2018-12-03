@@ -1,4 +1,4 @@
-package com.example.runhwguo.mediaproject
+package com.example.runhwguo.mediaproject.drawimage
 
 import android.content.Context
 import android.graphics.*

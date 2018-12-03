@@ -1,9 +1,10 @@
-package com.example.runhwguo.mediaproject
+package com.example.runhwguo.mediaproject.drawimage
 
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.os.Environment
 import android.support.v7.app.AppCompatActivity
+import com.example.runhwguo.mediaproject.R
 import kotlinx.android.synthetic.main.activity_image_view_pic.*
 import java.io.File
 

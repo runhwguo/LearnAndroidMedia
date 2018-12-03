@@ -3,6 +3,8 @@
           package="com.example.runhwguo.mediaproject">
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 
     <application
             android:allowBackup="true"
@@ -18,11 +20,13 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".ImageViewPicActivity">
+        <activity android:name=".drawimage.ImageViewPicActivity">
         </activity>
-        <activity android:name=".SurfaceViewPicActivity">
+        <activity android:name=".drawimage.SurfaceViewPicActivity">
         </activity>
-        <activity android:name=".CustomVIewPicActivity">
+        <activity android:name=".drawimage.CustomVIewPicActivity">
+        </activity>
+        <activity android:name=".captureaudio.AudioActivity">
         </activity>
     </application>
 

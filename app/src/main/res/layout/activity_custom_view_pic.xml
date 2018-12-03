@@ -5,9 +5,9 @@
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".CustomVIewPicActivity">
+        tools:context=".drawimage.CustomVIewPicActivity">
 
-    <com.example.runhwguo.mediaproject.CustomImageView
+    <com.example.runhwguo.mediaproject.drawimage.CustomImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" app:srcCompat="@android:color/holo_blue_bright"
             android:id="@+id/imageView2" app:layout_constraintEnd_toEndOf="parent"

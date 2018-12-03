@@ -1,4 +1,4 @@
-package com.example.runhwguo.mediaproject
+package com.example.runhwguo.mediaproject.drawimage
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -9,6 +9,7 @@ import android.os.Environment
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.SurfaceHolder
+import com.example.runhwguo.mediaproject.R
 import kotlinx.android.synthetic.main.activity_surface_view_pic.*
 import java.io.File
 
