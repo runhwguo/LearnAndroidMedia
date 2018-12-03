@@ -9,8 +9,8 @@ import java.io.IOException
 
 class PcmToWavUtil
 /**
- * @param sampleRate sample rate、采样率
- * @param channel channel、声道
+ * @param mSampleRate sample rate、采样率
+ * @param mChannel channel、声道
  * @param encoding Audio data format、音频格式
  */
 internal constructor(private val mSampleRate: Int, private val mChannel: Int, encoding: Int) {
@@ -18,7 +18,6 @@ internal constructor(private val mSampleRate: Int, private val mChannel: Int, en
      * 缓存的音频大小
      */
     private val mBufferSize: Int = AudioRecord.getMinBufferSize(mSampleRate, mChannel, encoding)
-
 
     /**
      * pcm文件转wav文件
@@ -50,17 +49,19 @@ internal constructor(private val mSampleRate: Int, private val mChannel: Int, en
         } catch (e: IOException) {
             e.printStackTrace()
         }
-
     }
-
 
     /**
      * 加入wav文件头
      */
     @Throws(IOException::class)
     private fun writeWaveFileHeader(
-        out: FileOutputStream, totalAudioLen: Long, totalDataLen: Long,
-        longSampleRate: Long, channels: Int, byteRate: Long
+        out: FileOutputStream,
+        totalAudioLen: Long,
+        totalDataLen: Long,
+        longSampleRate: Long,
+        channels: Int,
+        byteRate: Long
     ) {
         val header = ByteArray(44)
         // RIFF/WAVE header
