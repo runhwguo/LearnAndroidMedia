@@ -35,7 +35,7 @@ class AudioActivity : AppCompatActivity() {
             file.delete()
         }
 
-       mRecordBufSize = AudioRecord.getMinBufferSize(
+        mRecordBufSize = AudioRecord.getMinBufferSize(
             Config.SAMPLE_RATE_INHZ,
             Config.CHANNEL_CONFIG,
             Config.AUDIO_FORMAT
@@ -80,6 +80,13 @@ class AudioActivity : AppCompatActivity() {
         }).start()
     }
 
+    fun stopRecord() {
+        mIsRecording = false
+        // 释放资源
+        mAudioRecord.stop()
+        mAudioRecord.release()
+    }
+
     fun onAudioRecordClick(v: View) {
         if (mIsRecording) {
             btnAudioRecord.text = "开始录制"
@@ -90,12 +97,19 @@ class AudioActivity : AppCompatActivity() {
         }
     }
 
-    fun stopRecord() {
-        mIsRecording = false
-        // 释放资源
-        mAudioRecord.stop()
-        mAudioRecord.release()
+    fun onPcm2WavClick(v: View) {
+        val pcmToWavUtil = PcmToWavUtil(Config.SAMPLE_RATE_INHZ, Config.CHANNEL_CONFIG, Config.AUDIO_FORMAT)
+        val pcmFile = File(Environment.getExternalStorageDirectory().path, "test.pcm")
+        val wavFile = File(Environment.getExternalStorageDirectory().path, "test.wav")
+        if (!wavFile.mkdirs()) {
+            Log.e(TAG, "wavFile Directory not created")
+        }
+        if (wavFile.exists()) {
+            wavFile.delete()
+        }
+        pcmToWavUtil.pcmToWav(pcmFile.absolutePath, wavFile.absolutePath)
     }
+
 
     companion object {
         private const val TAG = "AudioActivity"
