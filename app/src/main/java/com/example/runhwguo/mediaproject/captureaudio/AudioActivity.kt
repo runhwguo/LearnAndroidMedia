@@ -7,6 +7,7 @@ import android.os.Environment
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import com.example.runhwguo.mediaproject.R
 import kotlinx.android.synthetic.main.activity_audio.*
 import java.io.File
@@ -108,6 +109,7 @@ class AudioActivity : AppCompatActivity() {
             wavFile.delete()
         }
         pcmToWavUtil.pcmToWav(pcmFile.absolutePath, wavFile.absolutePath)
+        Toast.makeText(this, "转换ok, 保存路径为" + wavFile.absolutePath, Toast.LENGTH_SHORT).show()
     }
 
 
