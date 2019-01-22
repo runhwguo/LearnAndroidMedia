@@ -1,6 +1,7 @@
 package com.example.runhwguo.mediaproject.captureaudio
 
 import android.media.*
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.support.v7.app.AppCompatActivity
@@ -16,8 +17,8 @@ class AudioActivity : AppCompatActivity() {
     private var mRecordBufSize = 0 // 声明recordBuffer的大小字段
     private lateinit var mAudioRecord: AudioRecord// 声明 AudioRecord 对象
     private var mIsRecording = false
+    private var mIsPlaying = false
     private lateinit var mAudioTrack: AudioTrack
-    private lateinit var mAudioData: ByteArray
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -116,30 +117,78 @@ class AudioActivity : AppCompatActivity() {
     }
 
     fun onPlayAudioClick(v: View) {
-        val pcmFile = File(Environment.getExternalStorageDirectory().path, "test.pcm")
-        val size = pcmFile.length().toInt()
-        mAudioData = ByteArray(size)
+        if (btnPlayAudio.text == "播放音频") {
+            mIsPlaying = true
+            playInModeStream()
+            btnPlayAudio.text = "停止播放"
+        } else if (btnPlayAudio.text == "停止播放") {
+            mIsPlaying = false
+            releaseAudioTrack()
+        }
+    }
+
+    /**
+     * 播放，使用stream模式
+     */
+    private fun playInModeStream() {
+        /*
+        * SAMPLE_RATE_INHZ 对应pcm音频的采样率
+        * channelConfig 对应pcm音频的声道
+        * AUDIO_FORMAT 对应pcm音频的格式
+        * */
+        val channelConfig = AudioFormat.CHANNEL_OUT_MONO
+        val minBufferSize =
+            AudioTrack.getMinBufferSize(Config.SAMPLE_RATE_INHZ, AudioFormat.CHANNEL_OUT_MONO, Config.AUDIO_FORMAT)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            mAudioTrack = AudioTrack(
+                AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build(),
+                AudioFormat.Builder().setSampleRate(Config.SAMPLE_RATE_INHZ)
+                    .setEncoding(Config.AUDIO_FORMAT)
+                    .setChannelMask(channelConfig)
+                    .build(),
+                minBufferSize,
+                AudioTrack.MODE_STREAM,
+                AudioManager.AUDIO_SESSION_ID_GENERATE
+            )
+        } else {
+            mAudioTrack = AudioTrack(
+                AudioManager.STREAM_MUSIC,
+                Config.SAMPLE_RATE_INHZ,
+                channelConfig,
+                Config.AUDIO_FORMAT,
+                minBufferSize,
+                AudioTrack.MODE_STREAM
+            )
+        }
+        mAudioTrack.play()
+
+        val file = File(Environment.getExternalStorageDirectory().path, "test.pcm")
         try {
-            val buf = BufferedInputStream(FileInputStream(pcmFile))
-            buf.read(mAudioData, 0, mAudioData.size)
-            buf.close()
-        } catch (e: FileNotFoundException) {
-            e.printStackTrace()
+            val fileInputStream = FileInputStream(file)
+            Thread(Runnable {
+                try {
+                    val tempBuffer = ByteArray(minBufferSize)
+                    while (fileInputStream.available() > 0 && mIsPlaying) {
+                        val readCount = fileInputStream.read(tempBuffer)
+                        if (readCount == AudioTrack.ERROR_INVALID_OPERATION || readCount == AudioTrack.ERROR_BAD_VALUE) {
+                            continue
+                        }
+                        if (readCount != 0 && readCount != -1) {
+                            mAudioTrack.write(tempBuffer, 0, readCount)
+                        }
+                    }
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                }
+            }).start()
+
         } catch (e: IOException) {
             e.printStackTrace()
         }
-
-        mAudioTrack = AudioTrack(
-            AudioManager.STREAM_MUSIC, Config.SAMPLE_RATE_INHZ,
-            AudioFormat.CHANNEL_OUT_STEREO, Config.AUDIO_FORMAT,
-            mAudioData.size, AudioTrack.MODE_STATIC
-        )
-
-        mAudioTrack.write(mAudioData, 0, mAudioData.size)
-
-        mAudioTrack.play()
     }
-
 
     companion object {
         private const val TAG = "AudioActivity"

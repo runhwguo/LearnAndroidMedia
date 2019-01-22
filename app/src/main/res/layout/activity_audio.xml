@@ -27,6 +27,7 @@
             app:layout_constraintBottom_toBottomOf="parent" android:onClick="onPcm2WavClick"/>
     <Button
             android:text="播放音频"
+
             android:onClick="onPlayAudioClick"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
