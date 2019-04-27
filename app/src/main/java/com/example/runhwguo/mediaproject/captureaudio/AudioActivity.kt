@@ -18,11 +18,12 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
+import java.util.concurrent.atomic.AtomicBoolean
 
 class AudioActivity : AppCompatActivity() {
     private var mRecordBufSize = 0 // 声明recordBuffer的大小字段
     private lateinit var mAudioRecord: AudioRecord// 声明 AudioRecord 对象
-    private var mIsRecording = false
+    private var mIsRecording = AtomicBoolean(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,7 +33,7 @@ class AudioActivity : AppCompatActivity() {
                 this, Manifest.permission.RECORD_AUDIO
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO), 10002)
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO), 1002)
         }
     }
 
@@ -44,23 +45,29 @@ class AudioActivity : AppCompatActivity() {
         }
         if (file.exists()) {
             file.delete()
+            file.createNewFile()
+        } else {
+            file.createNewFile()
         }
 
+        // 声明recordBuffer的大小字段
         mRecordBufSize = AudioRecord.getMinBufferSize(
             Config.SAMPLE_RATE_INHZ,
             Config.CHANNEL_CONFIG,
             Config.AUDIO_FORMAT
-        ) // 声明recordBuffer的大小字段
+        )
+
+        // 声明 AudioRecord 对象
         mAudioRecord = AudioRecord(
             MediaRecorder.AudioSource.MIC,
             Config.SAMPLE_RATE_INHZ,
             Config.CHANNEL_CONFIG,
             Config.AUDIO_FORMAT,
             mRecordBufSize
-        )// 声明 AudioRecord 对象
+        )
 
         mAudioRecord.startRecording()
-        mIsRecording = true
+        mIsRecording.set(true)
         Thread(Runnable {
             var os: FileOutputStream? = null
             try {
@@ -70,15 +77,17 @@ class AudioActivity : AppCompatActivity() {
             }
 
             if (null != os) {
-                while (mIsRecording) {
+                while (mIsRecording.get()) {
                     val read = mAudioRecord.read(data, 0, mRecordBufSize)
                     // 如果读取音频数据没有出现错误，就将数据写入到文件
-                    if (AudioRecord.ERROR_INVALID_OPERATION != read) {
+                    if (AudioRecord.ERROR_INVALID_OPERATION != read && AudioRecord.ERROR_BAD_VALUE != read) {
                         try {
                             os.write(data)
                         } catch (e: IOException) {
                             e.printStackTrace()
                         }
+                    } else {
+                        Log.w(TAG, "read value is $read")
                     }
                 }
                 try {
@@ -91,15 +100,15 @@ class AudioActivity : AppCompatActivity() {
         }).start()
     }
 
-    fun stopRecord() {
-        mIsRecording = false
+    private fun stopRecord() {
+        mIsRecording.set(false)
         // 释放资源
         mAudioRecord.stop()
         mAudioRecord.release()
     }
 
     fun onAudioRecordClick(v: View) {
-        if (mIsRecording) {
+        if (mIsRecording.get()) {
             btnAudioRecord.text = "开始录制"
             stopRecord()
         } else {
@@ -121,7 +130,6 @@ class AudioActivity : AppCompatActivity() {
         pcmToWavUtil.pcmToWav(pcmFile.absolutePath, wavFile.absolutePath)
         Toast.makeText(this, "转换ok, 保存路径为" + wavFile.absolutePath, Toast.LENGTH_SHORT).show()
     }
-
 
     companion object {
         private const val TAG = "AudioActivity"
