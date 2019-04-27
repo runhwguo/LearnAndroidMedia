@@ -5,4 +5,5 @@
     Android 音视频开发(一) : 通过三种方式绘制图片 done
         SurfaceView是单独的windows，用Layout Inspector抓不到布局
    Android 音视频开发(二)：使用 AudioRecord 采集音频PCM并保存到文件 done
-   Android 音视频开发(三)：使用 AudioTrack 播放PCM音频 done
+   Android 音视频开发(三)：使用 AudioTrack 播放PCM音频 stream mode
+        注意：采集的时候是channel_in，播放的时候是channel_out
