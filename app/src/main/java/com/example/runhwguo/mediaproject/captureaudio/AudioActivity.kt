@@ -1,9 +1,13 @@
 package com.example.runhwguo.mediaproject.captureaudio
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.os.Bundle
 import android.os.Environment
+import android.support.v4.app.ActivityCompat
+import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
@@ -15,7 +19,6 @@ import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
 
-
 class AudioActivity : AppCompatActivity() {
     private var mRecordBufSize = 0 // 声明recordBuffer的大小字段
     private lateinit var mAudioRecord: AudioRecord// 声明 AudioRecord 对象
@@ -24,9 +27,16 @@ class AudioActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_audio)
+
+        if (ContextCompat.checkSelfPermission(
+                this, Manifest.permission.RECORD_AUDIO
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO), 10002)
+        }
     }
 
-    fun startRecord() {
+    private fun startRecord() {
         val data = ByteArray(mRecordBufSize)
         val file = File(Environment.getExternalStorageDirectory().path, "test.pcm")
         if (!file.mkdirs()) {
