@@ -8,6 +8,7 @@ import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.view.View
+import com.example.runhwguo.mediaproject.camera.CameraPreviewActivity
 import com.example.runhwguo.mediaproject.captureaudio.AudioActivity
 import com.example.runhwguo.mediaproject.drawimage.CustomVIewPicActivity
 import com.example.runhwguo.mediaproject.drawimage.ImageViewPicActivity
@@ -48,5 +49,9 @@ class MainActivity : AppCompatActivity() {
 
     fun onAudioRecordClick(v: View) {
         startActivity(Intent(this, AudioActivity::class.java))
+    }
+
+    fun onCameraPreviewClick(v:View){
+        startActivity(Intent(this, CameraPreviewActivity::class.java))
     }
 }
