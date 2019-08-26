@@ -1,9 +1,14 @@
 package com.example.runhwguo.mediaproject.captureaudio
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.media.*
+import android.media.AudioTrack
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.support.v4.app.ActivityCompat
+import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
@@ -11,45 +16,57 @@ import android.widget.Toast
 import com.example.runhwguo.mediaproject.R
 import kotlinx.android.synthetic.main.activity_audio.*
 import java.io.*
+import java.util.concurrent.atomic.AtomicBoolean
 
 
 class AudioActivity : AppCompatActivity() {
     private var mRecordBufSize = 0 // 声明recordBuffer的大小字段
     private lateinit var mAudioRecord: AudioRecord// 声明 AudioRecord 对象
-    private var mIsRecording = false
-    private var mIsPlaying = false
-    private lateinit var mAudioTrack: AudioTrack
+    private var mIsRecording = AtomicBoolean(false)
+
+    private var mAudioTrack: AudioTrack? = null
+    private lateinit var mAudioData: ByteArray
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_audio)
+
+        if (ContextCompat.checkSelfPermission(
+                this, Manifest.permission.RECORD_AUDIO
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO), 1002)
+        }
     }
 
-    fun startRecord() {
+    private fun startRecord() {
         val data = ByteArray(mRecordBufSize)
         val file = File(Environment.getExternalStorageDirectory().path, "test.pcm")
-        if (!file.exists() && !file.mkdirs()) {
+        if (!file.mkdirs()) {
             Log.e(TAG, "Directory not created")
         }
         if (file.exists()) {
             file.delete()
         }
 
+        // 声明recordBuffer的大小字段
         mRecordBufSize = AudioRecord.getMinBufferSize(
             Config.SAMPLE_RATE_INHZ,
             Config.CHANNEL_CONFIG,
             Config.AUDIO_FORMAT
-        ) // 声明recordBuffer的大小字段
+        )
+
+        // 声明 AudioRecord 对象
         mAudioRecord = AudioRecord(
             MediaRecorder.AudioSource.MIC,
             Config.SAMPLE_RATE_INHZ,
             Config.CHANNEL_CONFIG,
             Config.AUDIO_FORMAT,
             mRecordBufSize
-        )// 声明 AudioRecord 对象
+        )
 
         mAudioRecord.startRecording()
-        mIsRecording = true
+        mIsRecording.set(true)
         Thread(Runnable {
             var os: FileOutputStream? = null
             try {
@@ -59,15 +76,17 @@ class AudioActivity : AppCompatActivity() {
             }
 
             if (null != os) {
-                while (mIsRecording) {
+                while (mIsRecording.get()) {
                     val read = mAudioRecord.read(data, 0, mRecordBufSize)
                     // 如果读取音频数据没有出现错误，就将数据写入到文件
-                    if (AudioRecord.ERROR_INVALID_OPERATION != read) {
+                    if (AudioRecord.ERROR_INVALID_OPERATION != read && AudioRecord.ERROR_BAD_VALUE != read) {
                         try {
                             os.write(data)
                         } catch (e: IOException) {
                             e.printStackTrace()
                         }
+                    } else {
+                        Log.w(TAG, "read value is $read")
                     }
                 }
                 try {
@@ -80,20 +99,16 @@ class AudioActivity : AppCompatActivity() {
         }).start()
     }
 
-    fun stopRecord() {
-        mIsRecording = false
+    private fun stopRecord() {
+        mIsRecording.set(false)
         // 释放资源
         mAudioRecord.stop()
         mAudioRecord.release()
     }
 
-    fun releaseAudioTrack() {
-        mAudioTrack.stop()
-        mAudioTrack.release()
-    }
-
+    // TODO: 有时候采集的pcm文件，是0 KB
     fun onAudioRecordClick(v: View) {
-        if (mIsRecording) {
+        if (mIsRecording.get()) {
             btnAudioRecord.text = "开始录制"
             stopRecord()
         } else {
@@ -106,7 +121,7 @@ class AudioActivity : AppCompatActivity() {
         val pcmToWavUtil = PcmToWavUtil(Config.SAMPLE_RATE_INHZ, Config.CHANNEL_CONFIG, Config.AUDIO_FORMAT)
         val pcmFile = File(Environment.getExternalStorageDirectory().path, "test.pcm")
         val wavFile = File(Environment.getExternalStorageDirectory().path, "test.wav")
-        if (!wavFile.exists() && !wavFile.mkdirs()) {
+        if (!wavFile.mkdirs()) {
             Log.e(TAG, "wavFile Directory not created")
         }
         if (wavFile.exists()) {
@@ -116,77 +131,50 @@ class AudioActivity : AppCompatActivity() {
         Toast.makeText(this, "转换ok, 保存路径为" + wavFile.absolutePath, Toast.LENGTH_SHORT).show()
     }
 
-    fun onPlayAudioClick(v: View) {
-        if (btnPlayAudio.text == "播放音频") {
-            mIsPlaying = true
-            playInModeStream()
-            btnPlayAudio.text = "停止播放"
-        } else if (btnPlayAudio.text == "停止播放") {
-            mIsPlaying = false
-            releaseAudioTrack()
-        }
-    }
+    // MODE_STREAM
+    fun onPlayPcmClick(v: View) {
+        v.isEnabled = false
 
-    /**
-     * 播放，使用stream模式
-     */
-    private fun playInModeStream() {
-        /*
-        * SAMPLE_RATE_INHZ 对应pcm音频的采样率
-        * channelConfig 对应pcm音频的声道
-        * AUDIO_FORMAT 对应pcm音频的格式
-        * */
+        releaseAudioTrack()
+
         val channelConfig = AudioFormat.CHANNEL_OUT_MONO
         val minBufferSize =
-            AudioTrack.getMinBufferSize(Config.SAMPLE_RATE_INHZ, AudioFormat.CHANNEL_OUT_MONO, Config.AUDIO_FORMAT)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mAudioTrack = AudioTrack(
-                AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_MEDIA)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .build(),
-                AudioFormat.Builder().setSampleRate(Config.SAMPLE_RATE_INHZ)
-                    .setEncoding(Config.AUDIO_FORMAT)
-                    .setChannelMask(channelConfig)
-                    .build(),
-                minBufferSize,
-                AudioTrack.MODE_STREAM,
-                AudioManager.AUDIO_SESSION_ID_GENERATE
-            )
-        } else {
-            mAudioTrack = AudioTrack(
-                AudioManager.STREAM_MUSIC,
-                Config.SAMPLE_RATE_INHZ,
-                channelConfig,
-                Config.AUDIO_FORMAT,
-                minBufferSize,
-                AudioTrack.MODE_STREAM
-            )
-        }
-        mAudioTrack.play()
+            AudioTrack.getMinBufferSize(Config.SAMPLE_RATE_INHZ, channelConfig, Config.AUDIO_FORMAT)
+        mAudioTrack = AudioTrack(
+            AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build(),
+            AudioFormat.Builder().setSampleRate(Config.SAMPLE_RATE_INHZ)
+                .setEncoding(Config.AUDIO_FORMAT)
+                .setChannelMask(channelConfig)
+                .build(),
+            minBufferSize,
+            AudioTrack.MODE_STREAM,
+            AudioManager.AUDIO_SESSION_ID_GENERATE
+        )
+        mAudioTrack?.play()
 
-        val file = File(Environment.getExternalStorageDirectory().path, "test.pcm")
-        try {
-            val fileInputStream = FileInputStream(file)
-            Thread(Runnable {
-                try {
-                    val tempBuffer = ByteArray(minBufferSize)
-                    while (fileInputStream.available() > 0 && mIsPlaying) {
-                        val readCount = fileInputStream.read(tempBuffer)
-                        if (readCount == AudioTrack.ERROR_INVALID_OPERATION || readCount == AudioTrack.ERROR_BAD_VALUE) {
-                            continue
-                        }
-                        if (readCount != 0 && readCount != -1) {
-                            mAudioTrack.write(tempBuffer, 0, readCount)
-                        }
-                    }
-                } catch (e: IOException) {
-                    e.printStackTrace()
+        Thread(Runnable {
+            val tempBuffer = ByteArray(minBufferSize)
+            var readCount = -1
+            val fin = FileInputStream((Environment.getExternalStorageDirectory().path + File.separator + "test.pcm"))
+            while (fin.available() > 0) {
+                readCount = fin.read(tempBuffer)
+                if (readCount != -1) {
+                    mAudioTrack?.write(tempBuffer, 0, readCount)
                 }
-            }).start()
+            }
+            fin.close()
+        }).start()
 
-        } catch (e: IOException) {
-            e.printStackTrace()
+        v.isEnabled = true
+    }
+
+    private fun releaseAudioTrack() {
+        mAudioTrack?.run {
+            stop()
+            release()
         }
     }
 

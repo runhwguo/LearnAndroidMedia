@@ -8,6 +8,7 @@ import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.view.View
+import com.example.runhwguo.mediaproject.camera.CameraActivity
 import com.example.runhwguo.mediaproject.captureaudio.AudioActivity
 import com.example.runhwguo.mediaproject.drawimage.CustomVIewPicActivity
 import com.example.runhwguo.mediaproject.drawimage.ImageViewPicActivity
@@ -24,22 +25,13 @@ class MainActivity : AppCompatActivity() {
 
         // 申请必要权限
         if (ContextCompat.checkSelfPermission(
-                this, Manifest.permission.READ_EXTERNAL_STORAGE
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 10001)
-        }
-        if (ContextCompat.checkSelfPermission(
-                this, Manifest.permission.RECORD_AUDIO
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO), 10002)
-        }
-        if (ContextCompat.checkSelfPermission(
                 this, Manifest.permission.WRITE_EXTERNAL_STORAGE
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 10003)
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 1001
+            )
         }
     }
 
@@ -57,5 +49,9 @@ class MainActivity : AppCompatActivity() {
 
     fun onAudioRecordClick(v: View) {
         startActivity(Intent(this, AudioActivity::class.java))
+    }
+
+    fun onCameraPreviewClick(v:View){
+        startActivity(Intent(this, CameraActivity::class.java))
     }
 }
